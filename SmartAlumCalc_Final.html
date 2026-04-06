@@ -2,11 +2,25 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NANOTEC Smart Alum Calculator</title>
+
+    <!-- บังคับโหลดรูป Mascot เป็นลำดับแรกสุด -->
+    <link rel="preload" as="image" href="https://i.postimg.cc/TwxhK5Pj/Water-clinic-mascot1.png" fetchpriority="high">
+
+    <!-- PWA Configuration & Meta Tags -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0096D6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Smart Alum">
+    <meta property="og:title" content="NANOTEC Smart Alum Calculator">
+    <meta property="og:description" content="เครื่องคำนวณปริมาณสารส้มอัจฉริยะ ช่วยแปลงค่าความลึก Secchi เป็น NTU และคำนวณโดสสารส้มอัตโนมัติ">
+    <meta property="og:image" content="https://i.postimg.cc/TwxhK5Pj/Water-clinic-mascot1.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -20,298 +34,210 @@
         }
     </script>
     <style>
-        /* ซ่อนลูกศรขึ้นลงใน input type number */
-        input[type=number]::-webkit-inner-spin-button, 
+        body { background: #f0f9ff; overscroll-behavior-y: none; }
+        input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
-
-        /* Animation เมื่อค่าถูกกรอกอัตโนมัติ */
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
         @keyframes highlight {
             0% { background-color: #dbeafe; transform: scale(1.02); }
             50% { background-color: #bfdbfe; }
             100% { background-color: white; transform: scale(1); }
         }
         .flash-highlight { animation: highlight 0.8s ease-out; }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 4s ease-in-out infinite; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-700 via-blue-800 to-cyan-600 min-h-screen flex items-center justify-center p-4 font-body text-gray-700">
+<body class="bg-gradient-to-br from-[#003B5C] via-[#0096D6] to-[#00BDD6] min-h-screen flex items-center justify-center p-4 text-gray-700 font-body">
 
-    <div class="glass-panel w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative">
-        
+    <div class="glass-panel w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative mt-4 mb-4">
+
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-cyan-500 p-5 text-center text-white relative shadow-md">
-            <h1 class="text-2xl font-sans font-bold tracking-wide"><i class="fa-solid fa-flask-vial mr-2"></i>NANOTEC Smart Alum</h1>
-            <p class="text-blue-100 text-sm mt-1 font-light"> คำนวณปริมาณสารส้มอัตโนมัติจากค่าความขุ่น</p>
+        <div class="bg-gradient-to-r from-[#0096D6] to-[#00BDD6] p-6 text-center text-white relative shadow-md flex flex-col items-center">
+            <h1 class="text-base font-sans font-bold tracking-wide">คลีนิคน้ำเพื่อชุมชน สวทช.</h1>
+            <img src="https://i.postimg.cc/TwxhK5Pj/Water-clinic-mascot1.png" alt="Mascot" class="w-full h-auto object-contain drop-shadow-2xl -mt-2 mb-4 animate-float">
+            <h1 class="text-2xl font-sans font-bold tracking-wide"><i class="fa-solid fa-flask-vial mr-2"></i>Smart Alum Calculator</h1>
+            <p class="text-blue-100 text-sm mt-1 font-light">คำนวณปริมาณสารส้มอัตโนมัติ</p>
+            
+            
         </div>
 
-        <div class="p-6 space-y-6 pt-8">
-            
-            <!-- NEW SECTION 0: SECCHI DEPTH INPUT (To NTU Converter) -->
+        <div class="p-6 space-y-6 pt-6">
+
+            <!-- SECTION 0: SECCHI DEPTH -->
             <div class="space-y-4">
-
                 <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
-                        <i class="fa-solid fa-ruler-vertical"></i>
-                    </div>
-                    <input type="number" id="secchiDepth" oninput="calculateNtuFromSecchi()" placeholder=" "
-                        class="peer w-full pl-10 pr-4 py-3 bg-white border-2 border-blue-100 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-0 text-gray-700 font-bold text-lg h-14 transition-all">
-                    
-                    <label class="absolute left-9 -top-2.5 bg-white px-1 text-sm text-blue-600 transition-all 
-                                  peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-sm peer-placeholder-shown:bg-transparent
-                                  peer-focus:-top-2.5 peer-focus:left-9 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:text-sm font-sans rounded font-bold">
-                        ความลึกจากกระบอกวัดความขุ่น (ซม.)
-                    </label>
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500"><i class="fa-solid fa-ruler-vertical"></i></div>
+                    <input type="number" id="secchiDepth" oninput="calculateNtuFromSecchi()" placeholder=" " class="peer w-full pl-10 pr-4 py-3 bg-white border-2 border-blue-100 rounded-xl focus:outline-none focus:border-blue-500 text-gray-700 font-bold text-lg h-14 transition-all">
+                    <label class="absolute left-9 -top-2.5 bg-white px-1 text-sm text-blue-600 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:left-9 peer-focus:text-blue-600 peer-focus:bg-white font-sans rounded font-bold">ระบุความลึกจากกระบอกวัดความขุ่น (ซม.)</label>
                 </div>
-                <div id="secchi-formula" class="text-[10px] text-gray-400 mt-1 text-right px-1">
-                    รอรับค่าความลึกเพื่อคำนวณ...
-                </div>
+                <div id="secchi-formula" class="text-[10px] text-gray-400 mt-1 text-right px-1">รอรับค่าความลึกเพื่อคำนวณ...</div>
             </div>
 
-            <!-- Divider for NTU Result (Adjusted to left-align) -->
-            <div class="border-t border-gray-100 relative pt-2 text-left w-full">
-                <span class="absolute -top-3 left-0 bg-white px-2 text-xs text-gray-400 font-sans">↓ ผลลัพธ์ NTU ↓</span>
-            </div>
 
-            <!-- SECTION 1: TURBIDITY INPUT (Now Auto-filled by Secchi or manual) -->
+            <!-- SECTION 1: NTU -->
             <div>
                 <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
-                        <i class="fa-solid fa-eye-dropper"></i>
-                    </div>
-                    <input type="number" id="ntu" oninput="calculateDosageFromNTU()" placeholder=" "
-                        class="peer w-full pl-10 pr-4 py-3 bg-white border-2 border-blue-100 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-0 text-gray-700 font-bold text-lg h-14 transition-all">
-                    
-                    <label class="absolute left-9 -top-2.5 bg-white px-1 text-sm text-blue-600 transition-all 
-                                  peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-sm peer-placeholder-shown:bg-transparent
-                                  peer-focus:-top-2.5 peer-focus:left-9 peer-focus:text-blue-600 peer-focus:bg-white peer-focus:text-sm font-sans rounded font-bold">
-                        ความขุ่น (NTU)
-                    </label>
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500"><i class="fa-solid fa-eye-dropper"></i></div>
+                    <input type="number" id="ntu" oninput="calculateDosageFromNTU()" placeholder=" " class="peer w-full pl-10 pr-4 py-3 bg-white border-2 border-blue-100 rounded-xl focus:outline-none focus:border-blue-500 text-gray-700 font-bold text-lg h-14 transition-all">
+                    <label class="absolute left-9 -top-2.5 bg-white px-1 text-sm text-blue-600 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:left-9 peer-focus:text-blue-600 peer-focus:bg-white font-sans rounded font-bold">ความขุ่นที่ประเมินได้ (NTU)</label>
                 </div>
                 <div id="formula-display" class="text-[10px] text-gray-400 mt-1 text-right px-1">รอรับค่า NTU เพื่อเลือกสูตร...</div>
             </div>
 
-            <!-- Divider for Dosage Calculation (Adjusted to left-align) -->
-            <div class="border-t border-gray-100 relative pt-2 text-left w-full">
-                <span class="absolute -top-3 left-0 bg-white px-2 text-xs text-gray-400 font-sans">คำนวณ Dosage อัตโนมัติ</span>
-            </div>
-
-            <!-- SECTION 2: PROCESS PARAMETERS -->
+            <!-- SECTION 2: PARAMETERS -->
             <div class="space-y-5">
-                
-                <!-- Flow Rate -->
-                <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500">
-                        <i class="fa-solid fa-faucet-drip"></i>
-                    </div>
-                    <input type="number" id="flow" placeholder=" "
-                        class="peer w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-700 font-bold h-14">
-                    
-                    <label class="absolute left-9 -top-2 bg-white px-1 text-sm text-blue-500 transition-all 
-                                  peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:text-sm peer-placeholder-shown:bg-transparent
-                                  peer-focus:-top-2 peer-focus:left-9 peer-focus:text-blue-500 peer-focus:text-sm peer-focus:bg-white rounded font-bold">
-                        อัตราการผลิตน้ำ (m³/hr)
-                    </label>
-                </div>
 
-                <!-- Dosage -->
-                <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500">
-                        <i class="fa-solid fa-flask"></i> <!-- ไอคอนบีกเกอร์ -->
-                    </div>
-                    <input type="number" id="dosage" placeholder=" "
-                        class="peer w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-blue-700 font-bold h-14">
-                    
-                    <label class="absolute left-9 -top-2 bg-white px-1 text-sm text-blue-500 transition-all 
-                                  peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:text-sm peer-placeholder-shown:bg-transparent
-                                  peer-focus:-top-2 peer-focus:left-9 peer-focus:text-blue-500 peer-focus:text-sm peer-focus:bg-white rounded font-bold">
-                        ปริมาณสารส้ม (ppm หรือ g/m³)
-                    </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fa-solid fa-flask"></i></div>
+                    <input type="number" id="dosage" placeholder=" " class="peer w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 text-blue-700 font-bold h-14">
+                    <label class="absolute left-9 -top-2 bg-white px-1 text-sm text-blue-500 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:bg-transparent peer-focus:-top-2 peer-focus:left-9 peer-focus:text-blue-500 peer-focus:bg-white font-bold">ปริมาณสารส้มแนะนำเบื้องต้น (ppm, mg/L)</label>
                     <div id="auto-badge" class="hidden absolute right-2 top-4 bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded font-bold tracking-wider">AUTO</div>
                 </div>
 
-                <!-- 5-Column Grid (3:2 Ratio) -->
                 <div class="grid grid-cols-5 gap-4">
-                    
-                    <!-- Conc (3 ส่วน) -->
-                    <div class="relative group col-span-3">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500">
-                            <i class="fa-solid fa-percent"></i>
-                        </div>
-                        <input type="number" id="conc" placeholder=" "
-                            class="peer w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-700 font-bold h-14">
-                        
-                        <label class="absolute left-9 -top-2 bg-white px-1 text-sm text-blue-500 transition-all 
-                                      peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:text-sm peer-placeholder-shown:bg-transparent
-                                      peer-focus:-top-2 peer-focus:left-9 peer-focus:text-blue-500 peer-focus:text-sm peer-focus:bg-white rounded font-bold">
-                            ความเข้มข้น (%)
-                        </label>
+                    <div class="relative col-span-3">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fa-solid fa-percent"></i></div>
+                        <input type="number" id="conc" value="8" placeholder=" " class="peer w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 text-gray-700 font-bold h-14">
+                        <label class="absolute left-9 -top-2 bg-white px-1 text-sm text-blue-500 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:bg-transparent peer-focus:-top-2 peer-focus:left-9 peer-focus:text-blue-500 peer-focus:bg-white font-bold">ความเข้มข้นสารส้ม (%)</label>
                     </div>
-                    
-                    <!-- SG (2 ส่วน) -->
-                    <div class="relative group col-span-2">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500">
-                            <i class="fa-solid fa-weight-hanging"></i>
-                        </div>
-                        <input type="number" id="sg" value="1.2" step="0.01" placeholder=" "
-                            class="peer w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-700 font-bold h-14">
-                        
-                        <label class="absolute left-9 -top-2 bg-white px-1 text-sm text-blue-500 transition-all 
-                                      peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:text-sm peer-placeholder-shown:bg-transparent
-                                      peer-focus:-top-2 peer-focus:left-9 peer-focus:text-blue-500 peer-focus:text-sm peer-focus:bg-white rounded font-bold">
-                            S.G.
-                        </label>
+                    <div class="relative col-span-2">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fa-solid fa-weight-hanging"></i></div>
+                        <input type="number" id="sg" value="1.2" step="0.01" placeholder=" " class="peer w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 text-gray-700 font-bold h-14">
+                        <label class="absolute left-9 -top-2 bg-white px-1 text-sm text-blue-500 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:bg-transparent peer-focus:-top-2 peer-focus:left-9 peer-focus:text-blue-500 peer-focus:bg-white font-bold">S.G.</label>
                     </div>
+                </div>
+                <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fa-solid fa-faucet-drip"></i></div>
+                    <input type="number" id="flow" placeholder=" " class="peer w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 text-gray-700 font-bold h-14">
+                    <label class="absolute left-9 -top-2 bg-white px-1 text-sm text-blue-500 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:bg-transparent peer-focus:-top-2 peer-focus:left-9 peer-focus:text-blue-500 peer-focus:bg-white font-bold">ระบุอัตราผลิตน้ำของระบบ (ลบ.ม./ชม.)</label>
                 </div>
             </div>
 
-            <button onclick="calculateFinal()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-sans font-bold py-4 rounded-xl shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 mt-2 text-lg">
-                คำนวณอัตราการจ่าย
+            <button onclick="calculateFinal()" class="w-full bg-gradient-to-r from-[#0096D6] to-[#00BDD6] hover:shadow-lg text-white font-sans font-bold py-4 rounded-xl transform hover:-translate-y-0.5 transition-all duration-200 mt-2 text-lg">
+                คำนวณอัตราการจ่ายสารเคมี
             </button>
         </div>
 
-        <!-- Result Area -->
-        <div id="resultArea" class="hidden bg-slate-50 border-t border-gray-200 p-6 animate-fade-in-up">
+        <!-- RESULT AREA -->
+        <div id="resultArea" class="hidden bg-slate-50 border-t border-gray-200 p-6">
             <div class="grid grid-cols-2 gap-4">
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center relative overflow-hidden">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
-                    <p class="text-gray-400 text-[10px] font-sans uppercase mb-1">ลิตร / ชั่วโมง</p>
+                    <p class="text-gray-400 text-base font-sans uppercase mb-1">จ่ายด้วยปั๊มสารเคมี</p>
                     <p class="text-3xl font-bold text-blue-600 font-sans" id="outputLPH">0.00</p>
-                    <p class="text-xs text-gray-400 mt-1">L/hr</p>
+                    <p class="text-xs text-gray-400 mt-1">ลิตร/ชั่วโมง</p>
                 </div>
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center relative overflow-hidden">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-1 bg-cyan-500"></div>
-                    <p class="text-gray-400 text-[10px] font-sans uppercase mb-1">มิลลิลิตร / นาที</p>
+                    <p class="text-gray-400 text-base font-sans uppercase mb-1">จ่ายด้วยปั๊มสารเคมี</p>
                     <p class="text-3xl font-bold text-cyan-600 font-sans" id="outputMLM">0.00</p>
-                    <p class="text-xs text-gray-400 mt-1">ml/min</p>
-                </div>
-            </div>
-            
-            <div class="mt-5 p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800 flex gap-3 shadow-inner">
-                <i class="fa-solid fa-clipboard-check text-lg mt-1 text-blue-500"></i>
-                <div class="font-sans">
-                    <div class="font-bold mb-1 text-blue-600 text-sm">สรุปผลการคำนวณ</div>
-                     น้ำขุ่น <span id="summary-ntu" class="font-bold text-base">0</span> NTU <br>
-                     ใช้สารส้ม <span id="summary-ppm" class="font-bold text-base">0</span> ppm <br>
-                     ที่ Flow <span id="summary-flow" class="font-bold text-base">0</span> m³/hr
+                    <p class="text-xs text-gray-400 mt-1">มิลลิลิตร/นาที</p>
                 </div>
             </div>
 
-             <button onclick="resetForm()" class="w-full mt-6 text-gray-400 hover:text-gray-600 text-sm font-sans flex items-center justify-center gap-2 transition-colors">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center relative overflow-hidden mt-4">
+                <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
+                <p class="text-gray-400 text-base font-sans uppercase mb-1">หรือคิดเป็น</p>
+                <p class="text-xl font-bold text-indigo-600 font-sans" id="outputKGD">0.00</p>
+                <p class="text-xs text-gray-400 mt-1">กิโลกรัม/วัน</p>
+            </div>
+
+            <div class="mt-5 p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800 shadow-inner">
+                <div class="font-bold mb-2 text-blue-600 flex items-center"><i class="fa-solid fa-clipboard-check mr-2"></i> สรุปการคำนวณ</div>
+                <ul class="space-y-1 text-gray-600">
+                    <li class="flex justify-between border-b border-gray-200 pb-1"><span>ความขุ่นที่ประเมินได้ :</span> <span class="font-bold text-gray-600"><span id="summary-ntu">0</span> NTU</span></li>
+                    <li class="flex justify-between border-b border-gray-200 pb-1"><span>อัตราผลิตน้ำ :</span> <span class="font-bold text-gray-600"><span id="summary-flow">0</span> m³/hr</span></li>
+                    <li class="flex justify-between text-blue-600"><span>สารส้มที่แนะนำเบื้องต้น :</span> <span class="font-bold text-blue-600"><span id="summary-ppm">0</span> ppm</span></li>              
+                </ul>
+            </div>
+
+            <!-- *** NEW BUTTON: ไปคำนวณ Jar-Test *** -->
+            <a href="jar_test_calculator.html" class="w-full mt-5 bg-white border-2 border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50 text-indigo-600 font-sans font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm">
+                <i class="fa-solid fa-vials text-lg"></i> ไปคำนวณ Jar-Test ต่อ
+            </a>
+            <!-- ************************************ -->
+
+            <button onclick="resetForm()" class="w-full mt-6 text-gray-400 hover:text-gray-600 text-sm font-sans flex items-center justify-center gap-2 transition-colors">
                 <i class="fa-solid fa-rotate-right"></i> ล้างค่า / เริ่มใหม่
             </button>
-          
         </div>
 
-        <!-- Error/Validation Modal (Replaces alert()) -->
-        <div id="errorModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
-            <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95">
-                <div class="text-center">
-                    <i class="fa-solid fa-triangle-exclamation text-4xl text-yellow-500"></i>
-                    <h3 class="mt-2 text-lg font-bold text-gray-900 font-sans">ข้อมูลไม่สมบูรณ์</h3>
-                    <p class="mt-1 text-sm text-gray-500 font-body">กรุณากรอกข้อมูลในช่อง (อัตราการผลิต, ปริมาณสารส้ม, ความเข้มข้น, S.G.) ให้ครบถ้วน</p>
-                    <button onclick="closeModal()" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold transition-colors">รับทราบ</button>
-                </div>
-            </div>
+        <!-- Footer / Back to Hub -->
+        <div class="border-t border-gray-100 p-4 flex flex-col items-center justify-center space-y-3 bg-white">
+            <a href="index.html" class="inline-flex items-center text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors shadow-sm font-sans font-semibold">
+                <i class="fa-solid fa-arrow-left mr-2"></i> กลับสู่หน้าศูนย์กลางโครงการ (Hub)
+            </a>
+        <div class="flex flex-col items-center space-y-2.5">
+                        <div class="flex items-center justify-center space-x-2">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Status:</span>
+                            <span class="bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full text-[9px] font-bold border border-blue-100 shadow-sm">v1.2.0-build.20260406</span>
+                        </div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-loose">©2025-2026 NANOTEC,NSTDA <br class="md:hidden"><span class="hidden md:inline mx-2 text-slate-300">|</span> ENV Research Team<span class="hidden md:inline mx-2 text-slate-300">|</span> ENV-iotDevMan</p>
+                    </div>
         </div>
-
-        <!-- Footer -->
-                 <a href="index.html" 
-                    class="block w-full text-center text-blue-500 font-sans font-bold py-5 rounded-xl transform hover:scale-[1.01] transition-all duration-200 text-lg">
-                    </i> Back to Hub
-                    <i class="fa-solid fa-up-right-from-square text-gray-400 text-xs"></i>
-                </a> 
-        <div class="text-gray-400 text-center text-xs mt-1 font-sans p-2">V 1.1.2 (Nov2025) ENV-IoT DevTeam</div>
-
     </div>
 
     <script>
-        function closeModal() {
-             document.getElementById('errorModal').classList.add('hidden');
-        }
-        
-        // --- NEW FUNCTION: Secchi Depth to NTU Conversion ---
+        // --- Logic ---
         function calculateNtuFromSecchi() {
             const secchiInput = document.getElementById('secchiDepth');
             const ntuInput = document.getElementById('ntu');
-            
-            let depthCm = parseFloat(secchiInput.value); // Input is in CM
+            const formulaDisplay = document.getElementById('secchi-formula');
+            let depthCm = parseFloat(secchiInput.value);
 
             if (!isNaN(depthCm) && depthCm > 0) {
-                // Formula: ntu = ((EXP(LN(depth/244.13)/-0.662))-1)*0.824 (Input is assumed to be in CM)
                 try {
-                    
-                    if (depthCm <= 0) { // Safety check
-                        ntuInput.value = '';
-                        calculateDosageFromNTU();
-                        return;
-                    }
-                    
-                    let logRatio = Math.log(depthCm / 244.13); // Use depthCm directly
+                    let logRatio = Math.log(depthCm / 244.13);
                     let exponent = logRatio / (-0.662);
                     let ntu = (Math.exp(exponent) - 1) * 0.824;
-                    
-                    // Update NTU field and ensure it's positive (NTU cannot be negative)
-                    ntuInput.value = Math.max(0, ntu).toFixed(2); 
-                    
-                    // Now trigger the dosage calculation based on the new NTU value
-                    calculateDosageFromNTU(); 
+                    ntuInput.value = Math.max(0, ntu).toFixed(2);
+                    formulaDisplay.innerText = "แปลงจากความลึกสำเร็จ";
+                    formulaDisplay.className = "text-[10px] text-green-500 mt-1 text-right px-1";
+                    calculateDosageFromNTU();
                 } catch (e) {
-                    console.error("Error calculating NTU from Secchi:", e);
                     ntuInput.value = '';
                     calculateDosageFromNTU();
                 }
             } else {
-                // Clear NTU and dosage fields if depth is invalid or empty
                 ntuInput.value = '';
+                formulaDisplay.innerText = "รอรับค่าความลึกเพื่อคำนวณ...";
+                formulaDisplay.className = "text-[10px] text-gray-400 mt-1 text-right px-1";
                 calculateDosageFromNTU();
             }
         }
-        // --- END NEW FUNCTION ---
-
 
         function calculateDosageFromNTU() {
             const ntuInput = document.getElementById('ntu');
             const dosageInput = document.getElementById('dosage');
             const badge = document.getElementById('auto-badge');
             const formulaDisplay = document.getElementById('formula-display');
-            
             let ntu = parseFloat(ntuInput.value);
 
             if (!isNaN(ntu)) {
                 let calculatedPPM = 0;
-
-                // LOGIC การเลือกสูตร: (ตามที่ท่านได้กำหนดไว้)
                 if (ntu < 25) {
-                    // NTU < 25: alum_ppm = ntu * 0.7449
                     calculatedPPM = ntu * 0.7449;
-                    formulaDisplay.innerText = "สูตรที่ใช้: Alum = NTU × 0.7449 (<25 NTU)";
-                    formulaDisplay.className = "text-[10px] text-green-600 mt-1 text-right px-1 transition-all font-bold";
+                    formulaDisplay.innerText = "สูตร: Alum = NTU × 0.7449 (<25 NTU)";
+                    formulaDisplay.className = "text-[10px] text-green-600 mt-1 text-right px-1 font-bold";
                 } else {
-                    // NTU >= 25: alum_ppm = (10.68 * LN(ntu)) - 16.21
                     calculatedPPM = (10.68 * Math.log(ntu)) - 16.21;
-                    formulaDisplay.innerText = "สูตรที่ใช้: Alum = (10.68 × LN(NTU)) - 16.21 (≥25 NTU)";
-                    formulaDisplay.className = "text-[10px] text-orange-600 mt-1 text-right px-1 transition-all font-bold";
+                    formulaDisplay.innerText = "สูตร: Alum = (10.68 × LN(NTU)) - 16.21 (≥25 NTU)";
+                    formulaDisplay.className = "text-[10px] text-orange-600 mt-1 text-right px-1 font-bold";
                 }
-
-                dosageInput.value = Math.max(0, calculatedPPM).toFixed(2); // Ensure Dosage is not negative
+                dosageInput.value = Math.max(0, calculatedPPM).toFixed(2);
                 badge.classList.remove('hidden');
-                
-                // Animation
                 dosageInput.classList.remove('flash-highlight');
-                void dosageInput.offsetWidth; 
+                void dosageInput.offsetWidth;
                 dosageInput.classList.add('flash-highlight');
             } else {
                 formulaDisplay.innerText = "รอรับค่า NTU เพื่อเลือกสูตร...";
-                formulaDisplay.className = "text-[10px] text-gray-400 mt-1 text-right px-1 transition-all";
-                if(dosageInput.value === '') {
-                   badge.classList.add('hidden');
-                   dosageInput.value = ''; // Clear dosage if NTU is empty
-                }
+                formulaDisplay.className = "text-[10px] text-gray-400 mt-1 text-right px-1";
+                if(dosageInput.value === '') badge.classList.add('hidden');
             }
         }
 
@@ -322,46 +248,41 @@
             let conc = parseFloat(document.getElementById('conc').value);
             let sg = parseFloat(document.getElementById('sg').value);
 
-            // Validation: ตรวจสอบว่ากรอกครบถ้วนและตัวหารไม่ใช่ศูนย์
             if (isNaN(flow) || isNaN(dosage) || isNaN(conc) || isNaN(sg) || conc === 0 || sg === 0) {
-                // แสดง Modal แทน alert()
-                document.getElementById('errorModal').classList.remove('hidden');
+                alert("กรุณากรอกข้อมูลให้ครบถ้วน");
                 return;
             }
 
-            // สูตรหลัก: L/hr = (Flow [m³/hr] * Dosage [ppm]) / (Conc% * 10 * SG)
             let lph = (flow * dosage) / (conc * 10 * sg);
-            let mlm = (lph * 1000) / 60; // แปลง L/hr เป็น ml/min
+            let mlm = (lph * 1000) / 60;
+            let kgd = (flow * dosage * 24) / 1000;
 
             document.getElementById('resultArea').classList.remove('hidden');
-            
             document.getElementById('summary-ntu').innerText = isNaN(ntu) ? '-' : ntu;
             document.getElementById('summary-ppm').innerText = dosage.toFixed(2);
             document.getElementById('summary-flow').innerText = flow;
 
             animateValue("outputLPH", 0, lph, 800);
             animateValue("outputMLM", 0, mlm, 800);
+            animateValue("outputKGD", 0, kgd, 800);
 
-            // Scroll for mobile view
-            if(window.innerWidth < 768) {
-                setTimeout(() => {
-                    document.getElementById('resultArea').scrollIntoView({behavior: 'smooth'});
-                }, 100);
-            }
+            setTimeout(() => {
+                document.getElementById('resultArea').scrollIntoView({behavior: 'smooth'});
+            }, 100);
         }
-        
+
         function resetForm() {
-            document.getElementById('secchiDepth').value = ''; // NEW: Clear Secchi
+            document.getElementById('secchiDepth').value = '';
             document.getElementById('ntu').value = '';
             document.getElementById('flow').value = '';
             document.getElementById('dosage').value = '';
-            document.getElementById('conc').value = '';
-            document.getElementById('sg').value = '1.2'; // คืนค่า SG
+            document.getElementById('conc').value = '8';
+            document.getElementById('sg').value = '1.2';
             document.getElementById('formula-display').innerText = "รอรับค่า NTU เพื่อเลือกสูตร...";
-            document.getElementById('formula-display').className = "text-[10px] text-gray-400 mt-1 text-right px-1 transition-all";
+            document.getElementById('secchi-formula').innerText = "รอรับค่าความลึกเพื่อคำนวณ...";
             document.getElementById('auto-badge').classList.add('hidden');
             document.getElementById('resultArea').classList.add('hidden');
-            document.getElementById('ntu').focus();
+            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         function animateValue(id, start, end, duration) {
@@ -370,11 +291,19 @@
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const currentVal = (progress * (end - start) + start);
-                obj.innerHTML = currentVal.toFixed(2);
+                obj.innerHTML = (progress * (end - start) + start).toFixed(2);
                 if (progress < 1) window.requestAnimationFrame(step);
             };
             window.requestAnimationFrame(step);
+        }
+
+        // SW Registration safe check
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:') {
+                    navigator.serviceWorker.register('./service-worker.js').catch(e => console.log(e));
+                }
+            });
         }
     </script>
 </body>
